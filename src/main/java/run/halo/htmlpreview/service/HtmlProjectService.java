@@ -136,6 +136,7 @@ public class HtmlProjectService {
             deleteQuietly(projectDir);
             throw new ServerWebInputException("empty zip");
         }
+        flattenSingleWrapperDir(projectDir);
         if (!Files.exists(projectDir.resolve("index.html"))) {
             deleteQuietly(projectDir);
             throw new ServerWebInputException(
@@ -178,6 +179,7 @@ public class HtmlProjectService {
             deleteQuietly(projectDir);
             throw new ServerWebInputException("empty zip");
         }
+        flattenSingleWrapperDir(projectDir);
         if (!Files.exists(projectDir.resolve("index.html"))) {
             deleteQuietly(projectDir);
             throw new ServerWebInputException(
@@ -300,6 +302,47 @@ public class HtmlProjectService {
             }
         } catch (IOException e) {
             log.warn("[html-preview] failed to delete {}: {}", p, e.getMessage());
+        }
+    }
+
+    /**
+     * 兼容 GitHub / GitLab 下载的 zip 包:它们的顶层有一个与仓库同名的目录
+     * (如 {@code xml4u-gh-pages/}),所有文件都在该子目录里,导致
+     * {@code projectDir/index.html} 不存在。
+     * <p>若解压后根目录无 {@code index.html},但恰好有一个子目录包含 index.html,
+     * 且根目录没有其他非隐藏文件干扰,则把该子目录内容上移到 projectDir 根目录。
+     */
+    private static void flattenSingleWrapperDir(Path projectDir) {
+        if (Files.exists(projectDir.resolve("index.html"))) {
+            return;
+        }
+        Path wrapper = null;
+        try (var entries = Files.list(projectDir)) {
+            var visible = entries.filter(p -> {
+                String name = p.getFileName().toString();
+                return !name.startsWith(".") && !name.equals("__MACOSX");
+            }).toList();
+            if (visible.size() == 1 && Files.isDirectory(visible.get(0))) {
+                wrapper = visible.get(0);
+            }
+        } catch (IOException e) {
+            log.warn("[html-preview] failed to scan project dir: {}", e.getMessage());
+            return;
+        }
+        if (wrapper == null) return;
+        if (!Files.exists(wrapper.resolve("index.html"))) return;
+        try {
+            try (var entries = Files.list(wrapper)) {
+                for (var p : (Iterable<java.nio.file.Path>) entries::iterator) {
+                    Path dst = projectDir.resolve(p.getFileName().toString());
+                    Files.move(p, dst,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+            Files.deleteIfExists(wrapper);
+        } catch (IOException e) {
+            log.warn("[html-preview] failed to flatten wrapper dir {}: {}",
+                wrapper, e.getMessage());
         }
     }
 
