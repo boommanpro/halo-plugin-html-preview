@@ -1,0 +1,18 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: Plugin
+metadata:
+  name: html-preview
+spec:
+  enabled: true
+  requires: ">=2.20.0"
+  author:
+    name: boommanpro
+  logo: logo.png
+  displayName: "HTML 项目预览"
+  description: "上传 zip → 立刻 /preview/{id}/ 匿名访问"
+  homepage: https://github.com/boommanpro/halo-plugin-html-preview
+  repo: https://github.com/boommanpro/halo-plugin-html-preview
+  issues: https://github.com/boommanpro/halo-plugin-html-preview/issues
+  license:
+    - name: "MIT"
+      url: "https://opensource.org/licenses/MIT"

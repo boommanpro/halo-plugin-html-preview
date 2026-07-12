@@ -1,0 +1,16 @@
+apiVersion: v1alpha1
+kind: Role
+metadata:
+  name: html-preview-anonymous
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-anonymous: "true"
+    rbac.authorization.halo.run/display-name: "HTML 预览公开访问"
+  annotations:
+    rbac.authorization.halo.run/module: "HTML 项目预览"
+    rbac.authorization.halo.run/ui-permissions: |
+      []
+rules:
+  - nonResourceURLs: ["/preview", "/preview/*", "/preview/**"]
+    verbs: ["get"]

@@ -1,0 +1,126 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok" version "9.2.0"
+    id "run.halo.plugin.devtools" version "0.6.2"
+}
+
+group 'run.halo.htmlpreview'
+version '0.1.0'
+
+repositories {
+    maven {
+        name = 'Central Portal Snapshots'
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+        content {
+            includeGroupAndSubgroups('run.halo')
+        }
+    }
+    mavenCentral()
+}
+
+dependencies {
+    implementation platform('run.halo.tools.platform:plugin:2.25.0')
+    compileOnly 'run.halo.app:api'
+    testImplementation 'run.halo.app:api'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = 21
+}
+
+tasks.register('pnpmInstall', Exec) {
+    workingDir = file("${rootDir}/ui")
+    commandLine 'sh', '-c', '''
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"
+        nvm use 22.23.1 > /dev/null 2>&1 || true
+        pnpm install --prefer-offline --no-frozen-lockfile
+    '''
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    ignoreExitValue = false
+}
+
+tasks.register('pnpmBuild', Exec) {
+    workingDir = file("${rootDir}/ui")
+    commandLine 'sh', '-c', '''
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \\. "$NVM_DIR/nvm.sh"
+        nvm use 22.23.1 > /dev/null 2>&1 || true
+        pnpm run build
+    '''
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    ignoreExitValue = false
+    dependsOn 'pnpmInstall'
+}
+
+tasks.register('processUiResources') {
+    dependsOn 'pnpmBuild'
+    doLast {
+        // vite outputs to build/resources/main/console/. For dev-mode classloader
+        // (classes-directories), also copy to build/classes/java/main/console/.
+        copy {
+            from "${buildDir}/resources/main/console"
+            into "${buildDir}/classes/java/main/console"
+        }
+    }
+}
+
+tasks.named('classes') {
+    dependsOn tasks.named('processUiResources')
+}
+
+tasks.named('generatePluginComponentsIdx') {
+    notCompatibleWithConfigurationCache('This task invokes "Task.project" at execution time, which is not supported with configuration cache.')
+}
+
+halo {
+    version = '2.25.0'
+    port = 8090
+    superAdminUsername = 'admin'
+    superAdminPassword = 'admin'
+}
+
+haloPlugin {
+    openApi {
+        groupingRules {
+            extensionApis {
+                displayName = 'Extension API for html-preview'
+                pathsToMatch = [
+                    '/apis/console.api.html-preview.halo.run/v1alpha1/**',
+                    '/apis/html-preview.halo.run/v1alpha1/**'
+                ]
+            }
+        }
+        groupedApiMappings = [
+            '/v3/api-docs/extensionApis': 'extensionApis.json'
+        ]
+        generator {
+            outputDir = file("${rootDir}/ui/src/api/generated")
+            additionalProperties = [
+                useES6: true,
+                useSingleRequestParameter: true,
+                withSeparateModelsAndApi: true,
+                apiPackage: "api",
+                modelPackage: "models"
+            ]
+            typeMappings = [
+                set: "Array"
+            ]
+        }
+    }
+}

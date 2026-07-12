@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse / VSCode
+.classpath
+.project
+.settings/
+bin/
+.factorypath
+
+# macOS
+.DS_Store
+
+# Node / pnpm
+node_modules/
+ui/dist/
+ui/.vite/
+ui/.cache/
+
+# Vite / TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+logs/
+
+# Halo devtools runtime data (自动生成,包含 H2 数据库、索引、密钥)
+workplace/
+
+# Generated API client (可选:由 haloPlugin openApi 任务生成)
+ui/src/api/generated/
