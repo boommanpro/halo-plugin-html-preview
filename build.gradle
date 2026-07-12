@@ -5,7 +5,8 @@ plugins {
 }
 
 group 'run.halo.htmlpreview'
-version '0.1.0'
+// version 由 gradle.properties 提供(CI 用 -Pversion=<tag> 覆盖)。
+// 不在 build.gradle 显式赋值,避免与 devtools 插件冲突。
 
 repositories {
     maven {
