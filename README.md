@@ -2,6 +2,20 @@
 
 一个 [Halo](https://halo.run) 插件:把 zip 打包的纯前端项目(HTML/CSS/JS/图片)一键发布为可公开访问的静态站点,访问路径形如 `/preview/{slug}/`。
 
+## 截图
+
+| 项目管理 | 上传对话框 |
+|:---:|:---:|
+| ![项目管理](screenshots/03-project-management.png) | ![上传对话框](screenshots/04-upload-dialog.png) |
+
+| 预览站点 | 子页面 |
+|:---:|:---:|
+| ![预览站点](screenshots/05-preview-site.png) | ![子页面](screenshots/06-preview-subpage.png) |
+
+| 插件列表 | 插件详情 |
+|:---:|:---:|
+| ![插件列表](screenshots/01-plugin-list.png) | ![插件详情](screenshots/02-plugin-detail.png) |
+
 ## 特性
 
 - **zip 上传即发布**:管理后台上传 zip → 立即获得 `/preview/{slug}/` 公开访问链接
